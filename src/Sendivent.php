@@ -42,6 +42,14 @@ class Sendivent
         ]);
     }
 
+    /**
+     * Set recipient(s)
+     *
+     * @param string|array{id?: string, name?: string, avatar?: string, email?: string, phone?: string, slack_id?: string, meta?: array<string, mixed>}|list<string|array{id?: string, name?: string, avatar?: string, email?: string, phone?: string, slack_id?: string, meta?: array<string, mixed>}> $recipient
+     *   String: Direct identifier (email, phone, slack ID, etc.)
+     *   Array: Contact with channel identifiers (email, phone, slack_id) and optional metadata
+     *   List of above: Multiple recipients
+     */
     public function to(string|array $recipient): self
     {
         $this->to = $recipient;
@@ -78,6 +86,11 @@ class Sendivent
         return $this;
     }
 
+    /**
+     * Send the notification (blocking - waits for response)
+     *
+     * @return array{success: bool, data?: list<array<string, string|bool>>, error?: string, message?: string}
+     */
     public function send(): array
     {
         [$endpoint, $options] = $this->buildRequestOptions();
@@ -94,6 +107,11 @@ class Sendivent
         }
     }
 
+    /**
+     * Send the notification asynchronously (fire-and-forget)
+     *
+     * @return PromiseInterface
+     */
     public function sendAsync(): PromiseInterface
     {
         [$endpoint, $options] = $this->buildRequestOptions();
