@@ -88,16 +88,14 @@ class Sendivent
 
     /**
      * Send the notification (blocking - waits for response)
-     *
-     * @return array{success: bool, data?: list<array<string, string|bool>>, error?: string, message?: string}
      */
-    public function send(): array
+    public function send(): SendResponse
     {
         [$endpoint, $options] = $this->buildRequestOptions();
 
         try {
             $response = $this->client->request('POST', $endpoint, $options);
-            return json_decode($response->getBody(), true);
+            return SendResponse::from(json_decode($response->getBody(), true));
         } catch (GuzzleException $e) {
             throw new \RuntimeException(
                 'Sendivent API request failed: ' . $e->getMessage(),
