@@ -18,9 +18,10 @@ Requires PHP 8.1+ and Guzzle 7.0+
 ```php
 use Sendivent\Sendivent;
 
-$sendivent = new Sendivent('test_your_api_key_here', 'welcome');
+$sendivent = new Sendivent('test_your_api_key_here');
 
 $sendivent
+    ->event('welcome')
     ->to('user@example.com')
     ->payload(['name' => 'John Doe'])
     ->send();
@@ -34,8 +35,9 @@ The `send()` method returns a `SendResponse` object with helper methods:
 
 ```php
 $response = $sendivent
+    ->event('invoice')
     ->to('user@example.com')
-    ->payload(['name' => 'John'])
+    ->payload(['amount' => 100])
     ->send();
 
 if ($response->isSuccess()) {
@@ -54,8 +56,9 @@ For background sending without waiting for the response:
 
 ```php
 $promise = $sendivent
+    ->event('notification')
     ->to('user@example.com')
-    ->payload(['name' => 'John'])
+    ->payload(['message' => 'Hello'])
     ->sendAsync();
 
 // Continue with other work...
@@ -68,6 +71,7 @@ The `to()` method accepts strings, Contact objects, or arrays of either. The `id
 
 ```php
 $sendivent
+    ->event('welcome')
     ->to([
         'id' => 'user-12345',           // Your user's ID
         'email' => 'user@example.com',
@@ -81,11 +85,12 @@ $sendivent
 
 // Or multiple recipients
 $sendivent
+    ->event('newsletter')
     ->to([
         'user1@example.com',
         ['id' => 'user-456', 'email' => 'user2@example.com', 'name' => 'Jane']
     ])
-    ->payload(['subject' => 'Newsletter'])
+    ->payload(['subject' => 'Monthly Update'])
     ->send();
 ```
 
@@ -107,6 +112,7 @@ $sendivent
 
 ```php
 $sendivent
+    ->event('verification-code')
     ->channel('sms')
     ->to('+1234567890')
     ->payload(['code' => '123456'])
@@ -117,6 +123,7 @@ $sendivent
 
 ```php
 $sendivent
+    ->event('invoice')
     ->to('user@example.com')
     ->payload(['amount' => 100])
     ->overrides([
@@ -130,6 +137,7 @@ $sendivent
 
 ```php
 $sendivent
+    ->event('order-confirmation')
     ->to('user@example.com')
     ->payload(['order_id' => '12345'])
     ->idempotencyKey('order-12345-confirmation')
@@ -140,6 +148,7 @@ $sendivent
 
 ```php
 $sendivent
+    ->event('welcome')
     ->to('user@example.com')
     ->payload(['name' => 'Anders'])
     ->language('sv')  // Swedish
@@ -152,6 +161,7 @@ Send to configured event listeners without specifying recipients:
 
 ```php
 $sendivent
+    ->event('system-alert')
     ->payload(['severity' => 'high', 'message' => 'System alert'])
     ->send();
 ```

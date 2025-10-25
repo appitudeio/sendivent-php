@@ -9,7 +9,7 @@ use GuzzleHttp\Promise\PromiseInterface;
 class Sendivent
 {
     private Client $client;
-    private string $event;
+    private string|null $event = null;
     private string|array|null $to = null;
     private array $payload = [];
     private string|null $channel = null;
@@ -17,7 +17,7 @@ class Sendivent
     private array $overrides = [];
     private string|null $idempotencyKey = null;
 
-    public function __construct(string $apiKey, string $event)
+    public function __construct(string $apiKey)
     {
         if (!preg_match('/^(test_|live_)/', $apiKey)) {
             throw new \InvalidArgumentException(
@@ -25,7 +25,6 @@ class Sendivent
             );
         }
 
-        $this->event = $event;
         $baseUri = str_starts_with($apiKey, 'live_')
             ? 'https://api.sendivent.com/'
             : 'https://api-sandbox.sendivent.com/';
@@ -40,6 +39,15 @@ class Sendivent
             'timeout' => 30,
             'http_errors' => true
         ]);
+    }
+
+    /**
+     * Set the event name
+     */
+    public function event(string $event): self
+    {
+        $this->event = $event;
+        return $this;
     }
 
     /**
@@ -91,6 +99,10 @@ class Sendivent
      */
     public function send(): SendResponse
     {
+        if ($this->event === null) {
+            throw new \InvalidArgumentException('Event name must be set using event() method');
+        }
+
         [$endpoint, $options] = $this->buildRequestOptions();
 
         try {
@@ -112,6 +124,10 @@ class Sendivent
      */
     public function sendAsync(): PromiseInterface
     {
+        if ($this->event === null) {
+            throw new \InvalidArgumentException('Event name must be set using event() method');
+        }
+
         [$endpoint, $options] = $this->buildRequestOptions();
         return $this->client->requestAsync('POST', $endpoint, $options);
     }
