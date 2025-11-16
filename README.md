@@ -65,11 +65,17 @@ $promise = $sendivent
 // Promise resolves in background
 ```
 
-## Contact Objects
+## Contact Objects & Smart Detection
 
-The `to()` method accepts strings, Contact objects, or arrays of either. The `id` field represents your application's user ID - you can pass your existing user objects directly:
+The `to()` method accepts strings, Contact objects, or arrays of either. Sendivent automatically detects what type of identifier you're sending:
 
 ```php
+// String inputs - automatically detected by pattern matching
+$sendivent->event('welcome')->to('user@example.com')->send();  // Detected as email
+$sendivent->event('sms-code')->to('+1234567890')->send();      // Detected as phone
+$sendivent->event('alert')->to('U12345')->send();              // Detected as Slack user ID
+
+// Contact objects - your user's ID maps to external_id in Sendivent
 $sendivent
     ->event('welcome')
     ->to([
@@ -83,7 +89,7 @@ $sendivent
     ->payload(['welcome_message' => 'Hello!'])
     ->send();
 
-// Or multiple recipients
+// Multiple recipients
 $sendivent
     ->event('newsletter')
     ->to([
@@ -91,6 +97,14 @@ $sendivent
         ['id' => 'user-456', 'email' => 'user2@example.com', 'name' => 'Jane']
     ])
     ->payload(['subject' => 'Monthly Update'])
+    ->send();
+
+// Broadcast to Slack channel (no contact created)
+$sendivent
+    ->event('system-alert')
+    ->channel('slack')
+    ->to('#general')  // Broadcasts to channel, doesn't create contact
+    ->payload(['message' => 'System update'])
     ->send();
 ```
 
