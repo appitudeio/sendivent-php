@@ -174,7 +174,7 @@ class Sendivent
 
     private function buildRequestOptions(): array
     {
-        $endpoint = 'send/' . $this->event;
+        $endpoint = 'v1/send/' . $this->event;
         if ($this->channel) {
             $endpoint .= '/' . $this->channel;
         }
