@@ -15,7 +15,7 @@ class SendResponse
     {
         return new self(
             success: $response['success'],
-            data: $response['data'] ?? null,
+            data: $response['deliveries'] ?? null,
             error: $response['error'] ?? null,
             message: $response['message'] ?? null,
         );
