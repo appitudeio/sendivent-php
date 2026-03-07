@@ -6,18 +6,16 @@ class SendResponse
 {
     public function __construct(
         public readonly bool $success,
-        public readonly ?array $data = null,
+        public readonly ?array $deliveries = null,
         public readonly ?string $error = null,
-        public readonly ?string $message = null,
     ) {}
 
     public static function from(array $response): self
     {
         return new self(
             success: $response['success'],
-            data: $response['deliveries'] ?? null,
+            deliveries: $response['deliveries'] ?? null,
             error: $response['error'] ?? null,
-            message: $response['message'] ?? null,
         );
     }
 
@@ -33,12 +31,7 @@ class SendResponse
 
     public function toArray(): array
     {
-        return array_filter([
-            'success' => $this->success,
-            'data' => $this->data,
-            'error' => $this->error,
-            'message' => $this->message,
-        ], fn($v) => $v !== null);
+        return array_filter(get_object_vars($this), fn($v) => $v !== null);
     }
 
     public function toJson(int $options = 0): string
