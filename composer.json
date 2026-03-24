@@ -1,6 +1,6 @@
 {
     "name": "sendivent/sdk",
-    "version": "0.2.1",
+    "version": "0.4.0",
     "description": "Official PHP SDK for Sendivent - Multi-channel notification platform",
     "type": "library",
     "license": "MIT",

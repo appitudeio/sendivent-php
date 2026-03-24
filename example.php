@@ -275,7 +275,7 @@ $sendivent
     ->event('notification')
     ->to([
         'id' => 'user-789',
-        'slack_id' => 'U98765ZYXWV',  // Has Slack
+        'slack' => 'U98765ZYXWV',  // Has Slack
         // No email - will automatically use Slack
         'name' => 'Bob'
     ])

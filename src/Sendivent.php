@@ -24,6 +24,7 @@ class Sendivent
     private string|null $language = null;
     private array $overrides = [];
     private string|null $idempotencyKey = null;
+    private ?Contacts $contactsInstance = null;
 
     public function __construct(string $apiKey)
     {
@@ -51,6 +52,17 @@ class Sendivent
     }
 
     /**
+     * Access the Contacts API for managing contacts and push tokens
+     */
+    public function contacts(): Contacts
+    {
+        if ($this->contactsInstance === null) {
+            $this->contactsInstance = new Contacts($this->client);
+        }
+        return $this->contactsInstance;
+    }
+
+    /**
      * Set the event name
      */
     public function event(string $event): self
@@ -62,9 +74,9 @@ class Sendivent
     /**
      * Set recipient(s)
      *
-     * @param string|array{id?: string, name?: string, avatar?: string, email?: string, phone?: string, slack_id?: string, meta?: array<string, mixed>}|list<string|array{id?: string, name?: string, avatar?: string, email?: string, phone?: string, slack_id?: string, meta?: array<string, mixed>}> $recipient
+     * @param string|array{id?: string, name?: string, avatar?: string, email?: string, phone?: string, slack?: string, meta?: array<string, mixed>}|list<string|array{id?: string, name?: string, avatar?: string, email?: string, phone?: string, slack?: string, meta?: array<string, mixed>}> $recipient
      *   String: Direct identifier (email, phone, slack ID, etc.)
-     *   Array: Contact with channel identifiers (email, phone, slack_id) and optional metadata
+     *   Array: Contact with channel identifiers (email, phone, slack) and optional metadata
      *   List of above: Multiple recipients
      */
     public function to(string|array $recipient): self
@@ -76,7 +88,7 @@ class Sendivent
     /**
      * Set sender/from contact (for impersonation or reply-to)
      *
-     * @param string|array{id?: string, name?: string, avatar?: string, email?: string, phone?: string, slack_id?: string, meta?: array<string, mixed>} $sender
+     * @param string|array{id?: string, name?: string, avatar?: string, email?: string, phone?: string, slack?: string, meta?: array<string, mixed>} $sender
      *   String: Direct identifier (email, phone, slack ID, etc.)
      *   Array: Contact with channel identifiers and optional metadata
      */
@@ -261,8 +273,9 @@ class Sendivent
         $request .= "Connection: Close\r\n\r\n";
         $request .= $body;
 
-        // Send request and close immediately
+        // Send request, wait for server acknowledgement, then close
         fwrite($fp, $request);
+        fread($fp, 1); // Forces full TLS flush + server receives the request
         fclose($fp);
     }
 }
