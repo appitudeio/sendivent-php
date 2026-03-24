@@ -24,6 +24,7 @@ class Sendivent
     private string|null $language = null;
     private array $overrides = [];
     private string|null $idempotencyKey = null;
+    private ?Contacts $contactsInstance = null;
 
     public function __construct(string $apiKey)
     {
@@ -48,6 +49,17 @@ class Sendivent
             'timeout' => 30,
             'http_errors' => true
         ]);
+    }
+
+    /**
+     * Access the Contacts API for managing contacts and push tokens
+     */
+    public function contacts(): Contacts
+    {
+        if ($this->contactsInstance === null) {
+            $this->contactsInstance = new Contacts($this->client);
+        }
+        return $this->contactsInstance;
     }
 
     /**
