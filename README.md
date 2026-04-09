@@ -3,7 +3,7 @@
 [![Latest Version](https://img.shields.io/packagist/v/sendivent/sdk.svg)](https://packagist.org/packages/sendivent/sdk)
 [![License](https://img.shields.io/packagist/l/sendivent/sdk.svg)](https://packagist.org/packages/sendivent/sdk)
 
-Official PHP SDK for [Sendivent](https://sendivent.com) - Multi-channel notification platform supporting Email, SMS, Slack, and Push notifications.
+Official PHP SDK for [Sendivent](https://sendivent.com) - Multi-channel notification platform supporting Email, SMS, Slack, Push, Telegram, WhatsApp, and Discord.
 
 ## Installation
 
@@ -41,14 +41,17 @@ $response = $sendivent
     ->send();
 
 if ($response->isSuccess()) {
-    echo "Sent! Queue IDs: " . json_encode($response->data);
+    echo $response->id;
+    // "550e8400-e29b-41d4-a716-446655440000"
 } else {
     echo "Error: " . $response->error;
 }
 
-// Available properties: success, data, error, message
+// Available properties: id, event, status, error
 // Available methods: isSuccess(), hasError(), toArray(), toJson()
 ```
+
+The `id` is the notification identifier. Notifications are processed asynchronously — use `GET /v1/notifications/{id}` to track message status.
 
 ## Fire-and-Forget
 
@@ -110,7 +113,7 @@ $sendivent
 
 ## Key Features
 
-- **Multi-channel** - Email, SMS, Slack, and Push in one API
+- **Multi-channel** - Email, SMS, Slack, Push, Telegram, WhatsApp, and Discord in one API
 - **Fluent API** - Clean, chainable method calls
 - **Type-safe** - Full PHP 8.1+ type hints
 - **Fire-and-forget** - Async sending with `sendAsync()`

@@ -2,26 +2,38 @@
 
 namespace Sendivent;
 
+/**
+ * Response from Sendivent send API
+ *
+ * Unified response format: { id, event, status }
+ * The id is a notification tracking UUID.
+ * Query status via GET /v1/notifications/{id}
+ */
 class SendResponse
 {
     public function __construct(
-        public readonly bool $success,
-        public readonly ?array $deliveries = null,
+        /** Notification ID (sequence run UUID) */
+        public readonly string $id,
+        /** Event identifier that was triggered */
+        public readonly string $event,
+        /** Status: "accepted" means the notification is being processed */
+        public readonly string $status,
         public readonly ?string $error = null,
     ) {}
 
     public static function from(array $response): self
     {
         return new self(
-            success: $response['success'],
-            deliveries: $response['deliveries'] ?? null,
+            id: $response['id'] ?? '',
+            event: $response['event'] ?? '',
+            status: $response['status'] ?? '',
             error: $response['error'] ?? null,
         );
     }
 
     public function isSuccess(): bool
     {
-        return $this->success;
+        return $this->status === 'accepted';
     }
 
     public function hasError(): bool
