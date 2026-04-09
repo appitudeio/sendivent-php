@@ -255,7 +255,7 @@ try {
         ->send();
 
     if ($response->isSuccess()) {
-        echo "✓ Success! Queue IDs: " . json_encode($response->data) . "\n";
+        echo "✓ Success! Notification ID: " . $response->id . "\n";
     } else {
         echo "✗ Failed: " . $response->error . "\n";
     }
