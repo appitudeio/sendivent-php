@@ -37,6 +37,7 @@
         }
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit",
+        "smoke": "php tests/smoke/live.php"
     }
 }
