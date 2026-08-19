@@ -3,17 +3,21 @@
 namespace Sendivent;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
+use Sendivent\Exception\SendiventException;
 
 class Sendivent
 {
+    public const VERSION = '0.5.1';
+
     private const API_URLS = [
         'sandbox' => 'https://api-sandbox.sendivent.com/',
         'production' => 'https://api.sendivent.com/'
     ];
 
-    private Client $client;
+    private ClientInterface $client;
     private string $baseUri;
     private string $apiKey;
     private string|null $event = null;
@@ -26,7 +30,10 @@ class Sendivent
     private string|null $idempotencyKey = null;
     private ?Contacts $contactsInstance = null;
 
-    public function __construct(string $apiKey)
+    /**
+     * @param ClientInterface|null $httpClient Optional pre-configured client, mainly for testing
+     */
+    public function __construct(string $apiKey, ?ClientInterface $httpClient = null)
     {
         if (!preg_match('/^(test_|live_)/', $apiKey)) {
             throw new InvalidArgumentException(
@@ -39,16 +46,21 @@ class Sendivent
             ? self::API_URLS['production']
             : self::API_URLS['sandbox'];
 
-        $this->client = new Client([
+        $this->client = $httpClient ?? new Client([
             'base_uri' => $this->baseUri,
             'headers' => [
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
-                'User-Agent' => 'Sendivent-PHP/0.1.0'
+                'User-Agent' => self::userAgent()
             ],
             'timeout' => 30,
             'http_errors' => true
         ]);
+    }
+
+    public static function userAgent(): string
+    {
+        return 'Sendivent-PHP/' . self::VERSION;
     }
 
     /**
@@ -130,6 +142,9 @@ class Sendivent
 
     /**
      * Send the notification (blocking - waits for response)
+     *
+     * @throws Exception\ApiException       The API answered with a non-2xx status
+     * @throws Exception\TransportException The request never reached the API
      */
     public function send(): SendResponse
     {
@@ -141,14 +156,16 @@ class Sendivent
 
         try {
             $response = $this->client->request('POST', $endpoint, $options);
-            return SendResponse::from(json_decode($response->getBody(), true));
         } catch (GuzzleException $e) {
-            throw new \RuntimeException(
-                'Sendivent API request failed: ' . $e->getMessage(),
-                $e->getCode(),
-                $e
-            );
+            throw SendiventException::fromGuzzle($e);
         }
+
+        // A 2xx means the notification was accepted. Decode defensively so a
+        // truncated body or an intermediary's HTML error page can never turn an
+        // accepted send into a fatal error in the caller.
+        $decoded = json_decode((string) $response->getBody(), true);
+
+        return SendResponse::from(is_array($decoded) ? $decoded : null);
     }
 
     /**
@@ -172,7 +189,7 @@ class Sendivent
         $headers = [
             'Authorization' => 'Bearer ' . $this->apiKey,
             'Content-Type' => 'application/json',
-            'User-Agent' => 'Sendivent-PHP/0.1.0'
+            'User-Agent' => self::userAgent()
         ];
 
         // Add custom headers (like idempotency key)
