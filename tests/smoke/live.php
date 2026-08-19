@@ -63,5 +63,21 @@ try {
     check('  carries the API message', str_contains($e->getMessage(), 'Invalid API key'), $e->getMessage());
 }
 
+// 3. The contacts contract — read-only, no writes against the sandbox
+//
+// NB: the API currently answers an unknown contact with 500, not 404. That is
+// a server-side defect (res.error() collides with the project's own ApiError
+// class, so every res.error() falls through to the generic 500 handler). The
+// SDK's job is to surface whatever status arrives as a typed exception, so
+// that is what this asserts — it should not go red over an API bug.
+try {
+    (new Sendivent($key))->contacts()->get('sdk-smoke-test-missing@example.com');
+    check('missing contact raises ApiException', false, 'no exception thrown');
+} catch (ApiException $e) {
+    check('missing contact raises ApiException', true);
+    check('  carries the HTTP status', $e->getStatusCode() >= 400, 'status=' . $e->getStatusCode());
+    check('  carries the response body', $e->getResponseBody() !== '', $e->getResponseBody());
+}
+
 echo "\n" . ($failures === 0 ? "All contract checks passed.\n" : "$failures check(s) FAILED.\n");
 exit($failures === 0 ? 0 : 1);
