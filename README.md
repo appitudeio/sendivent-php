@@ -197,6 +197,48 @@ $sendivent
     ->send();
 ```
 
+## Error Handling
+
+`send()` throws only when the request fails. A 2xx response is always parsed
+into a `SendResponse`, even if the body is unexpected — the notification was
+already accepted at that point, so parsing never throws.
+
+```php
+use Sendivent\Exception\ApiException;
+use Sendivent\Exception\TransportException;
+
+try {
+    $response = $sendivent->event('receipt')->to($email)->send();
+}
+catch (ApiException $e) {
+    // The API answered with a non-2xx status
+    if ($e->getStatusCode() === 402) {
+        // Quota exhausted
+    }
+
+    error_log($e->getErrorCode() . ': ' . $e->getResponseBody());
+}
+catch (TransportException $e) {
+    // Never reached the API — DNS, refused connection, TLS or timeout.
+    // The notification may or may not have been delivered; retry with
+    // idempotencyKey() if you need certainty.
+}
+```
+
+Both extend `Sendivent\Exception\SendiventException`, which extends
+`\RuntimeException` — existing `catch (\RuntimeException $e)` blocks keep working.
+
+**Sending from inside a transaction?** A notification is rarely worth failing the
+work that triggered it. Either catch `SendiventException` around the send, or use
+`sendAsync()`, which is fire-and-forget and does not wait for a response.
+
+## Development
+
+```bash
+composer install
+composer test
+```
+
 ## Full Example
 
 See [example.php](./example.php) for a comprehensive demonstration of all SDK features.

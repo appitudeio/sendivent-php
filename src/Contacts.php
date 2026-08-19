@@ -2,14 +2,15 @@
 
 namespace Sendivent;
 
-use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
+use Sendivent\Exception\SendiventException;
 
 class Contacts
 {
-    private Client $client;
+    private ClientInterface $client;
 
-    public function __construct(Client $client)
+    public function __construct(ClientInterface $client)
     {
         $this->client = $client;
     }
@@ -84,6 +85,9 @@ class Contacts
 
     /**
      * @return array<string, mixed>
+     *
+     * @throws Exception\ApiException       The API answered with a non-2xx status
+     * @throws Exception\TransportException The request never reached the API
      */
     private function request(string $method, string $path, ?array $body = null): array
     {
@@ -94,13 +98,13 @@ class Contacts
 
         try {
             $response = $this->client->request($method, $path, $options);
-            return json_decode($response->getBody(), true);
         } catch (GuzzleException $e) {
-            throw new \RuntimeException(
-                'Sendivent API request failed: ' . $e->getMessage(),
-                $e->getCode(),
-                $e
-            );
+            throw SendiventException::fromGuzzle($e);
         }
+
+        // Decode defensively — an unparseable 2xx body must not be a TypeError
+        $decoded = json_decode((string) $response->getBody(), true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 }

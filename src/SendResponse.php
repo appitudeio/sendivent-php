@@ -21,8 +21,19 @@ class SendResponse
         public readonly ?string $error = null,
     ) {}
 
-    public static function from(array $response): self
+    /**
+     * Build a response object from a decoded body.
+     *
+     * Tolerates null and partial bodies on purpose: by the time we get here the
+     * server has already accepted the notification, so parsing must never turn a
+     * successful send into a fatal error for the caller.
+     *
+     * @param array<string, mixed>|null $response
+     */
+    public static function from(?array $response): self
     {
+        $response ??= [];
+
         return new self(
             id: $response['id'] ?? '',
             event: $response['event'] ?? '',
