@@ -1,0 +1,29 @@
+# GitHub's update bot (Dependabot): one weekly pull request per ecosystem that batches every
+# minor and patch bump; a major bump opens on its own so it gets a deliberate read.
+#
+# Every directory with its own manifest is listed: an entry is rooted at a manifest, so a
+# directory missing here is a directory nobody is told about. Adding a package means adding
+# its directory here; nothing enforces that.
+version: 2
+
+updates:
+  # PHP packages (Composer)
+  - package-ecosystem: "composer"
+    directories:
+      - "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+  # GitHub Actions used by the workflows
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
